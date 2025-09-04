@@ -1,0 +1,31 @@
+{
+  "info": {
+    "name": "QIWI API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Service accessibility",
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/payment-history/v1/persons/12345/payments", "host": ["{{baseUrl}}"], "path": ["payment-history","v1","persons","12345","payments"] } },
+      "event": [{
+        "listen": "test","script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "pm.test('Has data', () => pm.expect(pm.response.json()).to.have.property('data'));"] }
+      }]
+    },
+    {
+      "name": "2. Balance > 0",
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/funding-sources/v2/persons/12345/accounts", "host": ["{{baseUrl}}"], "path": ["funding-sources","v2","persons","12345","accounts"] } },
+      "event":[{"listen":"test","script":{"exec":["const j = pm.response.json();pm.test('Balance > 0', () => pm.expect(j.accounts[0].balance.amount).to.be.above(0));"]}}]
+    },
+    {
+      "name": "3. Create payment 1 RUB",
+      "request": { "method": "POST", "url": { "raw": "{{baseUrl}}/sinap/api/v2/terms/99/payments", "host": ["{{baseUrl}}"], "path": ["sinap","api","v2","terms","99","payments"] }, "body": {"mode":"raw","raw":"{ \"id\":\"123\",\"sum\":{\"amount\":1,\"currency\":\"643\"},\"fields\":{\"account\":\"79991234567\"} }","options":{"raw":{"language":"json"}}} },
+      "event":[{"listen":"test","script":{"exec":["pm.test('Create payment response', () => pm.expect([200,201,202]).to.include(pm.response.code));"]}}]
+    },
+    {
+      "name": "4. Execute payment",
+      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/payment-history/v1/transactions/123456", "host": ["{{baseUrl}}"], "path": ["payment-history","v1","transactions","123456"] } },
+      "event":[{"listen":"test","script":{"exec":["const j2=pm.response.json();pm.test('Status OK', () => pm.expect(j2.status).to.be.oneOf(['SUCCESS','WAITING']));"]}}]
+    }
+  ],
+  "variable":[{"key":"baseUrl","value":"https://edge.qiwi.com"}]
+}
